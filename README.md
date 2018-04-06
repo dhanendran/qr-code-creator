@@ -10,6 +10,9 @@ License URI: <a href="http://www.gnu.org/licenses/gpl-3.0.html">http://www.gnu.o
 == Description ==
 A WordPress plugin which will help you to create QR Codes.
 
+== Terms of use ==
+This plugin is using 3rd party service (<a href="http://goqr.me/api/" target="_blank">goqr.me</a>) to create QR codes. As per it's <a href="http://goqr.me/api/doc/create-qr-code/#general_tos" target="_blank">terms of service</a>, it won't store your data at any give poit.
+
 == Installation ==
 
 = From your WordPress dashboard =
