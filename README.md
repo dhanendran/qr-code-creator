@@ -3,7 +3,7 @@ Contributors: dhanendran
 Tags: QR Code, Generator, QR Code Creator, QR Code Generator
 Requires at least: 4.4
 Tested up to: 4.9.5
-Stable tag: 0.1.0
+Stable tag: 0.1.2
 License: GPLv3 or later
 License URI: <a href="http://www.gnu.org/licenses/gpl-3.0.html">http://www.gnu.org/licenses/gpl-3.0.html</a>
 
