@@ -11,7 +11,7 @@
  * Plugin URI:        https://github.com/dhanendran/qr-code-creator
  * Description:       A WordPress plugin which will help you to create QR Codes.
  * Tags:			  QR Code, Generator, QR Code Creator, QR Code Generator
- * Version:           0.1.2
+ * Version:           0.1.3
  * Author:            Dhanendran
  * Author URI:        http://dhanendranrajagopal.me/
  * License:           GPL-2.0+
