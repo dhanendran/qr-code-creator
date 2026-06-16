@@ -1,220 +1,211 @@
 /**
- * QR Code Creator Admin Scripts
+ * QR Code Creator — admin script.
+ *
+ * Generates QR codes locally in the browser using the bundled qr-code-styling
+ * library. No data is sent to any third-party service.
  *
  * @package QRCodeCreator
+ * @since   1.0.0
  */
-
-(function($) {
+( function ( $ ) {
 	'use strict';
 
+	var settings = window.qrCodeCreator || {};
+	var i18n     = settings.i18n || {};
+
+	var qrCode     = null;
+	var mediaFrame = null;
+
 	/**
-	 * QR Code Creator Admin Object
+	 * Read the current form values into a qr-code-styling options object.
+	 *
+	 * @return {Object}
 	 */
-	const QRCodeCreatorAdmin = {
-		/**
-		 * Initialize
-		 */
-		init: function() {
-			this.bindEvents();
-		},
+	function buildOptions() {
+		var size = parseInt( $( '#qr_code_size' ).val(), 10 ) || 200;
+		var fg   = $( '#qr_code_color' ).val() || '#000000';
+		var bg   = $( '#qr_code_bgcolor' ).val() || '#ffffff';
+		var ecc  = $( '#qr_code_ecc' ).val() || 'M';
+		var logo = $( '#qr_code_logo' ).val();
 
-		/**
-		 * Bind events
-		 */
-		bindEvents: function() {
-			$( '#create_qr_code' ).on( 'click', this.handleCreateQRCode.bind( this ) );
-			$( '#reset_qr_code' ).on( 'click', this.handleReset.bind( this ) );
-			$( '#qr_code_content' ).on( 'keypress', function( e ) {
-				if ( e.which === 13 && e.ctrlKey ) {
-					$( '#create_qr_code' ).trigger( 'click' );
-				}
-			});
-		},
-
-		/**
-		 * Handle create QR code
-		 *
-		 * @param {Event} e Event object
-		 */
-		handleCreateQRCode: function( e ) {
-			e.preventDefault();
-
-			const content = $( '#qr_code_content' ).val().trim();
-
-			// Validate content
-			if ( content.length <= 0 ) {
-				this.showError( qrCodeCreator.i18n.errorEmpty );
-				return;
+		var options = {
+			width: size,
+			height: size,
+			type: 'canvas',
+			data: $( '#qr_code_content' ).val(),
+			margin: 10,
+			qrOptions: {
+				errorCorrectionLevel: ecc
+			},
+			dotsOptions: {
+				color: fg,
+				type: 'square'
+			},
+			cornersSquareOptions: {
+				color: fg
+			},
+			cornersDotOptions: {
+				color: fg
+			},
+			backgroundOptions: {
+				color: bg
 			}
+		};
 
-			// Get form values
-			const size     = $( '#qr_code_size' ).val() || '200x200';
-			const ecc      = $( '#qr_code_ecc' ).val() || 'M';
-			const color    = $( '#qr_code_color' ).val() || '#000000';
-			const bgcolor  = $( '#qr_code_bgcolor' ).val() || '#FFFFFF';
-
-			// Show loading state
-			this.showLoading();
-
-			// Build API URL
-			const apiUrl = this.buildApiUrl( content, size, ecc, color, bgcolor );
-
-			// Generate preview URL (smaller size for preview)
-			const previewSize = '200x200';
-			const previewUrl  = this.buildApiUrl( content, previewSize, ecc, color, bgcolor );
-
-			// Load QR code image
-			this.loadQRCode( previewUrl, apiUrl );
-		},
-
-		/**
-		 * Build API URL
-		 *
-		 * @param {string} content Content to encode
-		 * @param {string} size QR code size
-		 * @param {string} ecc Error correction level
-		 * @param {string} color Foreground color
-		 * @param {string} bgcolor Background color
-		 * @return {string} API URL
-		 */
-		buildApiUrl: function( content, size, ecc, color, bgcolor ) {
-			const baseUrl = qrCodeCreator.apiUrl || 'https://api.qrserver.com/v1/create-qr-code/';
-			const params  = {
-				data:    encodeURIComponent( content ),
-				size:    size,
-				ecc:     ecc,
-				color:   color.replace( '#', '' ),
-				bgcolor: bgcolor.replace( '#', '' ),
+		if ( logo ) {
+			options.image        = logo;
+			options.imageOptions = {
+				crossOrigin: 'anonymous',
+				margin: 5,
+				imageSize: 0.4,
+				hideBackgroundDots: true
 			};
+		}
 
-			const queryString = Object.keys( params )
-				.map( function( key ) {
-					return encodeURIComponent( key ) + '=' + encodeURIComponent( params[ key ] );
-				})
-				.join( '&' );
+		return options;
+	}
 
-			return baseUrl + '?' + queryString;
-		},
+	/**
+	 * Show an error message in the result column.
+	 *
+	 * @param {string} message Message text.
+	 */
+	function showError( message ) {
+		$( '#qr_code_error' ).find( 'p' ).text( message );
+		$( '#qr_code_error' ).show();
+		$( '#qr_code_loading, #qr_code_preview, #qr_code_download' ).hide();
+	}
 
-		/**
-		 * Load QR code image
-		 *
-		 * @param {string} previewUrl Preview image URL
-		 * @param {string} downloadUrl Download image URL
-		 */
-		loadQRCode: function( previewUrl, downloadUrl ) {
-			const img = new Image();
+	/**
+	 * Generate (or regenerate) the QR code.
+	 */
+	function generate() {
+		var content = $.trim( $( '#qr_code_content' ).val() );
 
-			img.onload = function() {
-				QRCodeCreatorAdmin.hideLoading();
-				QRCodeCreatorAdmin.hideError();
-				QRCodeCreatorAdmin.showQRCode( previewUrl, downloadUrl );
-			};
+		$( '#qr_code_error' ).hide();
 
-			img.onerror = function() {
-				QRCodeCreatorAdmin.hideLoading();
-				QRCodeCreatorAdmin.showError( qrCodeCreator.i18n.errorApi );
-			};
+		if ( ! content ) {
+			showError( i18n.errorEmpty || 'Please enter some content to generate QR code.' );
+			return;
+		}
 
-			img.src = previewUrl;
-		},
+		if ( 'undefined' === typeof window.QRCodeStyling ) {
+			showError( i18n.errorGenerate || 'Error generating QR code. Please try again.' );
+			return;
+		}
 
-		/**
-		 * Show QR code
-		 *
-		 * @param {string} previewUrl Preview image URL
-		 * @param {string} downloadUrl Download image URL
-		 */
-		showQRCode: function( previewUrl, downloadUrl ) {
-			$( '#qr_code' ).attr( 'src', previewUrl );
-			$( '#qr_code_preview' ).fadeIn();
+		try {
+			var options = buildOptions();
 
-			// Generate download links
-			const formats = [
-				{ name: 'PNG', format: 'png' },
-				{ name: 'JPG', format: 'jpg' },
-				{ name: 'SVG', format: 'svg' },
-				{ name: 'EPS', format: 'eps' },
-			];
+			// Render into a fresh container each time.
+			$( '#qr_code' ).empty();
+			qrCode = new window.QRCodeStyling( options );
+			qrCode.append( document.getElementById( 'qr_code' ) );
 
-			let downloadLinks = '';
-			formats.forEach( function( format ) {
-				const url = downloadUrl + '&format=' + format.format;
-				downloadLinks += '<a href="' + url + '" class="button" download target="_blank" rel="noopener noreferrer">' + format.name + '</a> ';
-			});
-
-			$( '#qr_code_download_link' ).html( downloadLinks );
-			$( '#qr_code_download' ).fadeIn();
-		},
-
-		/**
-		 * Show loading state
-		 */
-		showLoading: function() {
-			$( '#qr_code_loading' ).show();
-			$( '#qr_code_preview' ).hide();
-			$( '#qr_code_download' ).hide();
-			$( '#qr_code_error' ).hide();
-		},
-
-		/**
-		 * Hide loading state
-		 */
-		hideLoading: function() {
 			$( '#qr_code_loading' ).hide();
-		},
+			$( '#qr_code_preview, #qr_code_download' ).show();
+		} catch ( e ) {
+			showError( i18n.errorGenerate || 'Error generating QR code. Please try again.' );
+		}
+	}
 
-		/**
-		 * Show error message
-		 *
-		 * @param {string} message Error message
-		 */
-		showError: function( message ) {
-			$( '#qr_code_error p' ).text( message );
-			$( '#qr_code_error' ).fadeIn();
-			$( '#qr_code_preview' ).hide();
-			$( '#qr_code_download' ).hide();
-		},
+	/**
+	 * Download the current QR code in the given format.
+	 *
+	 * @param {string} extension png or svg.
+	 */
+	function download( extension ) {
+		if ( ! qrCode ) {
+			return;
+		}
 
-		/**
-		 * Hide error message
-		 */
-		hideError: function() {
-			$( '#qr_code_error' ).hide();
-		},
+		qrCode.download( {
+			name: 'qr-code',
+			extension: extension
+		} );
+	}
 
-		/**
-		 * Handle reset
-		 *
-		 * @param {Event} e Event object
-		 */
-		handleReset: function( e ) {
+	/**
+	 * Reset the form and clear the result.
+	 */
+	function reset() {
+		$( '#qr_code_content' ).val( '' );
+		$( '#qr_code_size' ).val( '200' );
+		$( '#qr_code_ecc' ).val( 'H' );
+		$( '#qr_code_color' ).val( '#000000' );
+		$( '#qr_code_bgcolor' ).val( '#ffffff' );
+		$( '#qr_code_logo' ).val( '' );
+
+		$( '#qr_code' ).empty();
+		$( '#qr_code_logo_preview' ).hide().find( 'img' ).attr( 'src', '' );
+		$( '#qr_code_logo_remove' ).hide();
+		$( '#qr_code_loading, #qr_code_preview, #qr_code_download, #qr_code_error' ).hide();
+
+		qrCode = null;
+		$( '#qr_code_content' ).trigger( 'focus' );
+	}
+
+	/**
+	 * Show the chosen logo preview.
+	 *
+	 * @param {string} url Image URL.
+	 */
+	function showLogoPreview( url ) {
+		$( '#qr_code_logo_preview' ).show().find( 'img' ).attr( 'src', url );
+		$( '#qr_code_logo_remove' ).show();
+	}
+
+	/**
+	 * Open the WordPress media library to pick a logo.
+	 */
+	function chooseLogo() {
+		if ( mediaFrame ) {
+			mediaFrame.open();
+			return;
+		}
+
+		mediaFrame = wp.media( {
+			title: i18n.mediaTitle || 'Choose a logo image',
+			button: { text: i18n.mediaButton || 'Use this image' },
+			library: { type: 'image' },
+			multiple: false
+		} );
+
+		mediaFrame.on( 'select', function () {
+			var attachment = mediaFrame.state().get( 'selection' ).first().toJSON();
+			$( '#qr_code_logo' ).val( attachment.url );
+			showLogoPreview( attachment.url );
+		} );
+
+		mediaFrame.open();
+	}
+
+	$( function () {
+		$( '#create_qr_code' ).on( 'click', generate );
+		$( '#reset_qr_code' ).on( 'click', reset );
+
+		$( '#qr_code_content' ).on( 'keypress', function ( e ) {
+			if ( 13 === e.which && e.ctrlKey ) {
+				generate();
+			}
+		} );
+
+		$( '#qr_code_download_png' ).on( 'click', function () {
+			download( 'png' );
+		} );
+		$( '#qr_code_download_svg' ).on( 'click', function () {
+			download( 'svg' );
+		} );
+
+		$( '#qr_code_logo_upload' ).on( 'click', function ( e ) {
 			e.preventDefault();
-
-			// Reset form
-			$( '#qr_code_content' ).val( '' );
-			$( '#qr_code_size' ).val( '200x200' );
-			$( '#qr_code_ecc' ).val( 'M' );
-			$( '#qr_code_color' ).val( '#000000' );
-			$( '#qr_code_bgcolor' ).val( '#FFFFFF' );
-
-			// Reset preview
-			$( '#qr_code' ).attr( 'src', '' );
-			$( '#qr_code_preview' ).hide();
-			$( '#qr_code_download' ).hide();
-			$( '#qr_code_download_link' ).html( '' );
-			$( '#qr_code_error' ).hide();
-			$( '#qr_code_loading' ).hide();
-
-			// Focus on content field
-			$( '#qr_code_content' ).focus();
-		},
-	};
-
-	// Initialize when document is ready
-	$( document ).ready( function() {
-		QRCodeCreatorAdmin.init();
-	});
-
-})( jQuery );
-
+			chooseLogo();
+		} );
+		$( '#qr_code_logo_remove' ).on( 'click', function ( e ) {
+			e.preventDefault();
+			$( '#qr_code_logo' ).val( '' );
+			$( '#qr_code_logo_preview' ).hide().find( 'img' ).attr( 'src', '' );
+			$( this ).hide();
+		} );
+	} );
+} )( jQuery );

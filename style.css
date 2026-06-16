@@ -127,12 +127,28 @@
 	border-radius: 4px;
 }
 
-.qr-code-preview img {
+.qr-code-preview img,
+.qr-code-preview canvas,
+.qr-code-preview svg {
 	max-width: 100%;
 	height: auto;
 	border: 1px solid #dcdcde;
 	border-radius: 4px;
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Logo / center image picker */
+.qr-code-logo-preview {
+	margin-top: 10px;
+}
+
+.qr-code-logo-preview img {
+	max-width: 80px;
+	height: auto;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 4px;
+	background: #fff;
 }
 
 /* Download Links */

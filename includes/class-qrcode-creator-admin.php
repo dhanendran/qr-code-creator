@@ -36,6 +36,14 @@ class QRCodeCreator_Admin {
 	private $plugin_slug;
 
 	/**
+	 * Bundled qr-code-styling version.
+	 *
+	 * @since 1.0.0
+	 * @var string
+	 */
+	private $qr_styling_version = '1.9.2';
+
+	/**
 	 * Initialize the admin class.
 	 *
 	 * @since 0.2.0
@@ -85,6 +93,9 @@ class QRCodeCreator_Admin {
 			return;
 		}
 
+		// WordPress media library, for choosing a center logo image.
+		wp_enqueue_media();
+
 		// Enqueue styles.
 		wp_enqueue_style(
 			$this->plugin_slug . '-admin',
@@ -93,11 +104,20 @@ class QRCodeCreator_Admin {
 			$this->version
 		);
 
+		// Bundled QR generation library (local, no third-party API).
+		wp_enqueue_script(
+			$this->plugin_slug . '-qr-styling',
+			QR_CODE_CREATOR_URL . 'assets/js/qr-code-styling.js',
+			array(),
+			$this->qr_styling_version,
+			true
+		);
+
 		// Enqueue scripts.
 		wp_enqueue_script(
 			$this->plugin_slug . '-admin',
 			QR_CODE_CREATOR_URL . 'script.js',
-			array( 'jquery' ),
+			array( 'jquery', $this->plugin_slug . '-qr-styling' ),
 			$this->version,
 			true
 		);
@@ -107,15 +127,13 @@ class QRCodeCreator_Admin {
 			$this->plugin_slug . '-admin',
 			'qrCodeCreator',
 			array(
-				'nonce'   => wp_create_nonce( 'qr_code_creator_nonce' ),
-				'apiUrl'  => 'https://api.qrserver.com/v1/create-qr-code/',
-				'ajaxUrl' => admin_url( 'admin-ajax.php' ),
-				'i18n'    => array(
-					'errorEmpty' => esc_html__( 'Please enter some content to generate QR code.', 'qr-code-creator' ),
-					'errorApi'   => esc_html__( 'Error generating QR code. Please try again.', 'qr-code-creator' ),
-					'loading'    => esc_html__( 'Generating QR code...', 'qr-code-creator' ),
-					'success'    => esc_html__( 'QR code generated successfully!', 'qr-code-creator' ),
-					'download'   => esc_html__( 'Download:', 'qr-code-creator' ),
+				'i18n' => array(
+					'errorEmpty'    => esc_html__( 'Please enter some content to generate QR code.', 'qr-code-creator' ),
+					'errorGenerate' => esc_html__( 'Error generating QR code. Please try again.', 'qr-code-creator' ),
+					'loading'       => esc_html__( 'Generating QR code...', 'qr-code-creator' ),
+					'success'       => esc_html__( 'QR code generated successfully!', 'qr-code-creator' ),
+					'mediaTitle'    => esc_html__( 'Choose a logo image', 'qr-code-creator' ),
+					'mediaButton'   => esc_html__( 'Use this image', 'qr-code-creator' ),
 				),
 			)
 		);
@@ -140,9 +158,7 @@ class QRCodeCreator_Admin {
 				<div class="qr-code-creator-form">
 					<h2><?php esc_html_e( 'Create QR Code', 'qr-code-creator' ); ?></h2>
 
-					<form id="qr_code_creator_form" method="post">
-						<?php wp_nonce_field( 'qr_code_creator_action', 'qr_code_creator_nonce' ); ?>
-
+					<form id="qr_code_creator_form">
 						<table class="form-table" role="presentation">
 							<tbody>
 								<tr>
@@ -175,11 +191,11 @@ class QRCodeCreator_Admin {
 									</th>
 									<td>
 										<select name="qr_code_size" id="qr_code_size">
-											<option value="150x150"><?php esc_html_e( 'Small (150x150)', 'qr-code-creator' ); ?></option>
-											<option value="200x200" selected><?php esc_html_e( 'Medium (200x200)', 'qr-code-creator' ); ?></option>
-											<option value="250x250"><?php esc_html_e( 'Large (250x250)', 'qr-code-creator' ); ?></option>
-											<option value="300x300"><?php esc_html_e( 'Extra Large (300x300)', 'qr-code-creator' ); ?></option>
-											<option value="500x500"><?php esc_html_e( 'Huge (500x500)', 'qr-code-creator' ); ?></option>
+											<option value="150"><?php esc_html_e( 'Small (150x150)', 'qr-code-creator' ); ?></option>
+											<option value="200" selected><?php esc_html_e( 'Medium (200x200)', 'qr-code-creator' ); ?></option>
+											<option value="250"><?php esc_html_e( 'Large (250x250)', 'qr-code-creator' ); ?></option>
+											<option value="300"><?php esc_html_e( 'Extra Large (300x300)', 'qr-code-creator' ); ?></option>
+											<option value="500"><?php esc_html_e( 'Huge (500x500)', 'qr-code-creator' ); ?></option>
 										</select>
 										<p class="description">
 											<?php esc_html_e( 'Select the size of the QR code image.', 'qr-code-creator' ); ?>
@@ -196,12 +212,12 @@ class QRCodeCreator_Admin {
 									<td>
 										<select name="qr_code_ecc" id="qr_code_ecc">
 											<option value="L"><?php esc_html_e( 'Low (~7%)', 'qr-code-creator' ); ?></option>
-											<option value="M" selected><?php esc_html_e( 'Medium (~15%)', 'qr-code-creator' ); ?></option>
+											<option value="M"><?php esc_html_e( 'Medium (~15%)', 'qr-code-creator' ); ?></option>
 											<option value="Q"><?php esc_html_e( 'Quartile (~25%)', 'qr-code-creator' ); ?></option>
-											<option value="H"><?php esc_html_e( 'High (~30%)', 'qr-code-creator' ); ?></option>
+											<option value="H" selected><?php esc_html_e( 'High (~30%)', 'qr-code-creator' ); ?></option>
 										</select>
 										<p class="description">
-											<?php esc_html_e( 'Higher error correction allows the QR code to be readable even if partially damaged.', 'qr-code-creator' ); ?>
+											<?php esc_html_e( 'Higher error correction allows the QR code to be readable even if partially damaged. A high level is recommended when adding a center logo.', 'qr-code-creator' ); ?>
 										</p>
 									</td>
 								</tr>
@@ -243,6 +259,29 @@ class QRCodeCreator_Admin {
 										</p>
 									</td>
 								</tr>
+
+								<tr>
+									<th scope="row">
+										<label for="qr_code_logo_upload">
+											<?php esc_html_e( 'Logo / Center Image', 'qr-code-creator' ); ?>
+										</label>
+									</th>
+									<td>
+										<input type="hidden" name="qr_code_logo" id="qr_code_logo" value="" />
+										<button type="button" class="button" id="qr_code_logo_upload">
+											<?php esc_html_e( 'Add Logo', 'qr-code-creator' ); ?>
+										</button>
+										<button type="button" class="button" id="qr_code_logo_remove" style="display: none;">
+											<?php esc_html_e( 'Remove', 'qr-code-creator' ); ?>
+										</button>
+										<div id="qr_code_logo_preview" class="qr-code-logo-preview" style="display: none;">
+											<img src="" alt="" />
+										</div>
+										<p class="description">
+											<?php esc_html_e( 'Optional. Places an image in the center of the QR code. Use the "High" error correction level for best scannability.', 'qr-code-creator' ); ?>
+										</p>
+									</td>
+								</tr>
 							</tbody>
 						</table>
 
@@ -278,12 +317,19 @@ class QRCodeCreator_Admin {
 					</div>
 
 					<div id="qr_code_preview" class="qr-code-preview" style="display: none;">
-						<img id="qr_code" alt="<?php esc_attr_e( 'QR Code', 'qr-code-creator' ); ?>" />
+						<div id="qr_code"></div>
 					</div>
 
 					<div id="qr_code_download" class="qr-code-download" style="display: none;">
 						<h3><?php esc_html_e( 'Download:', 'qr-code-creator' ); ?></h3>
-						<div id="qr_code_download_link" class="qr-code-download-links"></div>
+						<div class="qr-code-download-links">
+							<button type="button" class="button button-secondary" id="qr_code_download_png">
+								<?php esc_html_e( 'Download PNG', 'qr-code-creator' ); ?>
+							</button>
+							<button type="button" class="button button-secondary" id="qr_code_download_svg">
+								<?php esc_html_e( 'Download SVG', 'qr-code-creator' ); ?>
+							</button>
+						</div>
 					</div>
 				</div>
 			</div>
@@ -291,17 +337,10 @@ class QRCodeCreator_Admin {
 			<div class="qr-code-creator-info">
 				<h3><?php esc_html_e( 'About', 'qr-code-creator' ); ?></h3>
 				<p>
-					<?php
-					printf(
-						/* translators: %s: Link to API documentation */
-						esc_html__( 'This plugin uses the %s service to create QR codes. As per their terms of service, your data is not stored.', 'qr-code-creator' ),
-						'<a href="https://goqr.me/api/" target="_blank" rel="noopener noreferrer">goqr.me API</a>'
-					);
-					?>
+					<?php esc_html_e( 'QR codes are generated locally in your browser. Your content never leaves your site — nothing is sent to any third-party service.', 'qr-code-creator' ); ?>
 				</p>
 			</div>
 		</div>
 		<?php
 	}
 }
-

@@ -12,9 +12,9 @@
  * @wordpress-plugin
  * Plugin Name:       QR Code Creator
  * Plugin URI:        https://github.com/dhanendran/qr-code-creator
- * Description:       A WordPress plugin which will help you to create QR Codes.
- * Short Description: Create customizable QR codes with size, color, and error correction options.
- * Version:           0.2.0
+ * Description:       Create QR codes directly in your WordPress admin — generated locally in the browser (no third-party API), with custom colors, error correction, a center logo, and PNG/SVG download.
+ * Short Description: Create customizable QR codes locally (no external API) with colors, error correction, a center logo, and PNG/SVG export.
+ * Version:           1.0.0
  * Author:            Dhanendran Rajagopal
  * Author URI:        https://dhanendranrajagopal.me/
  * License:           GPL-2.0+
@@ -36,7 +36,7 @@ if ( ! defined( 'ABSPATH' ) ) {
  *
  * @since 0.2.0
  */
-define( 'QR_CODE_CREATOR_VERSION', '0.2.0' );
+define( 'QR_CODE_CREATOR_VERSION', '1.0.0' );
 
 /**
  * Plugin directory path.
