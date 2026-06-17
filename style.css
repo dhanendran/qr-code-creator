@@ -1,3 +1,262 @@
-.qr-code-creator .actions {
-	display: block;
+/**
+ * QR Code Creator Admin Styles
+ *
+ * @package QRCodeCreator
+ */
+
+/* Container */
+.qr-code-creator-admin {
+	max-width: 1200px;
+}
+
+.qr-code-creator-container {
+	display: flex;
+	gap: 30px;
+	margin-top: 20px;
+}
+
+.qr-code-creator-form {
+	flex: 1;
+	min-width: 0;
+}
+
+.qr-code-creator-result {
+	flex: 0 0 400px;
+	min-width: 0;
+}
+
+/* Form Styles */
+.qr-code-creator-form .form-table {
+	margin-top: 20px;
+}
+
+.qr-code-creator-form .form-table th {
+	width: 200px;
+	padding: 20px 10px 20px 0;
+	vertical-align: top;
+}
+
+.qr-code-creator-form .form-table td {
+	padding: 15px 10px;
+	vertical-align: top;
+}
+
+.qr-code-creator-form textarea {
+	width: 100%;
+	max-width: 100%;
+	resize: vertical;
+	font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+}
+
+.qr-code-creator-form select {
+	min-width: 200px;
+}
+
+.qr-code-creator-form input[type="color"] {
+	width: 80px;
+	height: 40px;
+	cursor: pointer;
+	border: 1px solid #8c8f94;
+	border-radius: 4px;
+}
+
+.qr-code-creator-form .description {
+	margin-top: 8px;
+	margin-bottom: 0;
+	color: #646970;
+	font-style: normal;
+}
+
+.qr-code-creator-form .submit {
+	margin-top: 20px;
+	padding-top: 20px;
+	border-top: 1px solid #dcdcde;
+}
+
+.qr-code-creator-form .button {
+	margin-right: 10px;
+}
+
+/* Result Styles */
+.qr-code-creator-result {
+	background: #fff;
+	border: 1px solid #c3c4c7;
+	border-radius: 4px;
+	padding: 20px;
+	box-shadow: 0 1px 1px rgba(0, 0, 0, 0.04);
+}
+
+.qr-code-creator-result h2 {
+	margin-top: 0;
+	margin-bottom: 20px;
+	padding-bottom: 10px;
+	border-bottom: 1px solid #dcdcde;
+}
+
+/* Loading State */
+.qr-code-loading {
+	text-align: center;
+	padding: 40px 20px;
+}
+
+.qr-code-loading .spinner {
+	float: none;
+	margin: 0 auto 10px;
+}
+
+.qr-code-loading p {
+	margin: 0;
+	color: #646970;
+}
+
+/* Error State */
+.qr-code-error {
+	margin: 0 0 20px 0;
+}
+
+.qr-code-error p {
+	margin: 0;
+}
+
+/* Preview */
+.qr-code-preview {
+	text-align: center;
+	margin-bottom: 20px;
+	padding: 20px;
+	background: #f6f7f7;
+	border-radius: 4px;
+}
+
+.qr-code-preview img,
+.qr-code-preview canvas,
+.qr-code-preview svg {
+	max-width: 100%;
+	height: auto;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Logo / center image picker */
+.qr-code-logo-preview {
+	margin-top: 10px;
+}
+
+.qr-code-logo-preview img {
+	max-width: 80px;
+	height: auto;
+	border: 1px solid #dcdcde;
+	border-radius: 4px;
+	padding: 4px;
+	background: #fff;
+}
+
+/* Download Links */
+.qr-code-download {
+	margin-top: 20px;
+	padding-top: 20px;
+	border-top: 1px solid #dcdcde;
+}
+
+.qr-code-download h3 {
+	margin-top: 0;
+	margin-bottom: 15px;
+	font-size: 14px;
+}
+
+.qr-code-download-links {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 10px;
+}
+
+.qr-code-download-links .button {
+	margin: 0;
+	text-decoration: none;
+}
+
+.qr-code-download-links .button:hover {
+	text-decoration: none;
+}
+
+/* Info Section */
+.qr-code-creator-info {
+	margin-top: 30px;
+	padding: 20px;
+	background: #f0f6fc;
+	border-left: 4px solid #2271b1;
+	border-radius: 4px;
+}
+
+.qr-code-creator-info h3 {
+	margin-top: 0;
+}
+
+.qr-code-creator-info p {
+	margin-bottom: 0;
+}
+
+.qr-code-creator-info a {
+	text-decoration: none;
+}
+
+.qr-code-creator-info a:hover {
+	text-decoration: underline;
+}
+
+/* Responsive Design */
+@media screen and (max-width: 782px) {
+	.qr-code-creator-container {
+		flex-direction: column;
+		gap: 20px;
+	}
+
+	.qr-code-creator-result {
+		flex: 1;
+	}
+
+	.qr-code-creator-form .form-table th,
+	.qr-code-creator-form .form-table td {
+		display: block;
+		width: 100%;
+		padding: 10px 0;
+	}
+
+	.qr-code-creator-form .form-table th {
+		padding-bottom: 5px;
+	}
+
+	.qr-code-creator-form select,
+	.qr-code-creator-form textarea {
+		width: 100%;
+		max-width: 100%;
+	}
+
+	.qr-code-creator-form .submit {
+		text-align: left;
+	}
+
+	.qr-code-creator-form .button {
+		width: 100%;
+		margin-bottom: 10px;
+		margin-right: 0;
+	}
+}
+
+/* Accessibility */
+.qr-code-creator-form label {
+	font-weight: 600;
+}
+
+.qr-code-creator-form input:focus,
+.qr-code-creator-form select:focus,
+.qr-code-creator-form textarea:focus {
+	border-color: #2271b1;
+	box-shadow: 0 0 0 1px #2271b1;
+	outline: 2px solid transparent;
+}
+
+.qr-code-download-links .button:focus {
+	outline: 2px solid #2271b1;
+	outline-offset: 2px;
 }

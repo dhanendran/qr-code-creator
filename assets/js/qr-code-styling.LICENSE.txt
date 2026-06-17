@@ -1,0 +1,7 @@
+qr-code-styling v1.9.2
+https://github.com/kozakdenys/qr-code-styling
+Copyright (c) Denys Kozak
+Licensed under the MIT License.
+
+Bundled with QR Code Creator to generate QR codes locally in the browser
+(no third-party API calls).

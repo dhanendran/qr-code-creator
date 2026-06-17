@@ -1,22 +1,29 @@
 <?php
-
 /**
- * @author            Dhanendran (https://dhanendranrajagopal.me/)
- * @link              https://dhanendranrajagopal.me/
- * @since             0.1.0
- * @package           qr-code-creator
+ * QR Code Creator
+ *
+ * A WordPress plugin which will help you to create QR Codes.
+ *
+ * @package           QRCodeCreator
+ * @author            Dhanendran Rajagopal
+ * @copyright         2024 Dhanendran Rajagopal
+ * @license           GPL-2.0+
  *
  * @wordpress-plugin
  * Plugin Name:       QR Code Creator
  * Plugin URI:        https://github.com/dhanendran/qr-code-creator
- * Description:       A WordPress plugin which will help you to create QR Codes.
- * Tags:			  QR Code, Generator, QR Code Creator, QR Code Generator
- * Version:           0.1.3
- * Author:            Dhanendran
- * Author URI:        http://dhanendranrajagopal.me/
+ * Description:       Create QR codes directly in your WordPress admin — generated locally in the browser (no third-party API), with custom colors, error correction, a center logo, and PNG/SVG download.
+ * Short Description: Create customizable QR codes locally (no external API) with colors, error correction, a center logo, and PNG/SVG export.
+ * Version:           1.0.0
+ * Author:            Dhanendran Rajagopal
+ * Author URI:        https://dhanendranrajagopal.me/
  * License:           GPL-2.0+
  * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
  * Text Domain:       qr-code-creator
+ * Domain Path:       /languages
+ * Requires at least: 4.4
+ * Tested up to:      7.0
+ * Requires PHP:      7.4
  */
 
 // If this file is called directly, abort.
@@ -24,53 +31,119 @@ if ( ! defined( 'ABSPATH' ) ) {
 	die;
 }
 
+/**
+ * Plugin version constant.
+ *
+ * @since 0.2.0
+ */
+define( 'QR_CODE_CREATOR_VERSION', '1.0.0' );
+
+/**
+ * Plugin directory path.
+ *
+ * @since 0.2.0
+ */
+define( 'QR_CODE_CREATOR_PATH', plugin_dir_path( __FILE__ ) );
+
+/**
+ * Plugin directory URL.
+ *
+ * @since 0.2.0
+ */
+define( 'QR_CODE_CREATOR_URL', plugin_dir_url( __FILE__ ) );
+
+/**
+ * The core plugin class.
+ *
+ * @since 0.1.0
+ */
 class QRCodeCreator {
+
 	/**
-	 * Start up
+	 * Plugin version.
+	 *
+	 * @since 0.2.0
+	 * @var string
+	 */
+	private $version;
+
+	/**
+	 * Admin instance.
+	 *
+	 * @since 0.2.0
+	 * @var QRCodeCreator_Admin
+	 */
+	private $admin;
+
+	/**
+	 * Initialize the plugin.
+	 *
+	 * @since 0.1.0
+	 */
+	public function __construct() {
+		$this->version = QR_CODE_CREATOR_VERSION;
+		$this->load_dependencies();
+		$this->init_hooks();
+	}
+
+	/**
+	 * Load required dependencies.
+	 *
+	 * @since 0.2.0
+	 */
+	private function load_dependencies() {
+		require_once QR_CODE_CREATOR_PATH . 'includes/class-qrcode-creator-admin.php';
+	}
+
+	/**
+	 * Initialize hooks.
+	 *
+	 * @since 0.2.0
+	 */
+	private function init_hooks() {
+		add_action( 'plugins_loaded', array( $this, 'init' ) );
+		register_activation_hook( __FILE__, array( $this, 'activate' ) );
+		register_deactivation_hook( __FILE__, array( $this, 'deactivate' ) );
+	}
+
+	/**
+	 * Initialize the plugin.
+	 *
+	 * @since 0.1.0
 	 */
 	public function init() {
-		add_action( 'admin_menu', array( $this, 'add_plugin_page' ) );
-
-		wp_enqueue_script( 'qr_code_creator_script', plugin_dir_url( __FILE__ ) . 'script.js', array(), '1.0.0', true );
+		if ( is_admin() ) {
+			$this->admin = new QRCodeCreator_Admin( $this->version );
+		}
 	}
 
 	/**
-	 * Add options page
+	 * Activation hook.
+	 *
+	 * @since 0.2.0
 	 */
-	public function add_plugin_page() {
-		add_options_page(
-			'QR Code Creator', 
-			'QR Code Creator', 
-			'manage_options', 
-			'qr-code-creator', 
-			array( $this, 'create_admin_page' )
-		);
+	public function activate() {
+		// Add activation logic here if needed.
 	}
 
 	/**
-	 * Options page callback
+	 * Deactivation hook.
+	 *
+	 * @since 0.2.0
 	 */
-	public function create_admin_page() {
-		?>
-		<div class="qr-code-creator">
-			<h1>QR Code Creator</h1>
-			<textarea name="qr_code_content" id="qr_code_content" rows="10" cols="70" placeholder="Enter your content here"></textarea>
-			<div class="actions">
-				<button id="create_qr_code" class="button button-primary">Create</button>
-				<button id="reset_qr_code" class="button button-secondary">Reset</button>
-			</div>
-			<h2>QR Code</h2>
-			<img id="qr_code">
-			<h4>Download: </h4>
-			<div id="qr_code_download_link"></div>
-		</div>
-		<?php
+	public function deactivate() {
+		// Add deactivation logic here if needed.
 	}
 }
 
-if ( is_admin() ) {
-	$qrCodeCreator = new QRCodeCreator();
-	$qrCodeCreator->init();
+/**
+ * Initialize the plugin.
+ *
+ * @since 0.1.0
+ */
+function qr_code_creator_init() {
+	new QRCodeCreator();
 }
+qr_code_creator_init();
 
 
